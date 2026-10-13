@@ -1,0 +1,89 @@
+// =====================================================================
+// Detection: Unexpected Azure OpenAI / AI Foundry API key access
+// Author: Tishev | ID: DET-001 | Date: 2026-10-12 | Status: experimental
+// Table: AzureActivity (Azure Activity connector in Microsoft Sentinel)
+// ATT&CK: T1552 Unsecured Credentials, T1496 Resource Hijacking (LLMjacking)
+//
+// Why "access" and not "creation": Azure AI Services accounts ship with two
+// keys (key1/key2) from the moment the account exists. Nobody "creates" one.
+// The event that matters is an identity READING (ListKeys) or REGENERATING
+// them, because that is when a static, identity-less credential leaves Azure.
+//
+// Logic: alert when a caller lists/regenerates keys on an AI account where
+// that caller/account pair has NOT been seen in the last 14 days.
+// Severity is raised when the call did not come from a known first-party
+// portal app (scripts, SDKs, stolen tokens replayed from attacker tooling).
+//
+// Suggested analytics rule settings: run every 1h, lookup 14d,
+// entity mapping Account = Caller, IP = CallerIpAddress, AzureResource = AccountResourceId.
+// =====================================================================
+let lookback = 14d;
+let detectionWindow = 1h;
+let keyOps = dynamic([
+    "MICROSOFT.COGNITIVESERVICES/ACCOUNTS/LISTKEYS/ACTION",
+    "MICROSOFT.COGNITIVESERVICES/ACCOUNTS/REGENERATEKEY/ACTION"
+]);
+// First-party portal app IDs, taken from Datadog's public rule
+// "Azure AI API keys listed outside of known AI web portals".
+// Verify each in Entra ID > Enterprise applications in your tenant before relying on them.
+let portalAppIds = dynamic([
+    "c44b4083-3bb0-49c1-b47d-974e53cbdf3c", // Azure Portal
+    "cb2ff863-7f30-4ced-ab89-a00194bcf6d9", // AI Studio / AI Foundry
+    "dc807dec-d211-4b3f-bc8a-43b3443c4874", // Azure OpenAI Studio
+    "d7304df8-741f-47d3-9bc2-df0e24e2071f", // Azure ML Studio
+    "4e09c6ac-4372-45b7-a977-e9f89e673e32"  // Speech Studio
+]);
+// Known automation identities that legitimately read keys (pipelines, rotation jobs).
+// Populate from your environment, or swap for a Sentinel watchlist: _GetWatchlist('AIKeyAllowlist')
+let allowedCallers = dynamic([]);
+let keyEvents = AzureActivity
+    | where TimeGenerated > ago(lookback)
+    | where OperationNameValue in~ (keyOps)
+    | where ActivityStatusValue in~ ("Success", "Succeeded")
+    | extend AppId = tostring(parse_json(Claims).appid)
+    | extend AccountResourceId = tolower(_ResourceId)
+    | extend AccountName = tostring(split(AccountResourceId, "/")[-1])
+    | project TimeGenerated, Caller, CallerIpAddress, AppId, AccountResourceId, AccountName,
+              OperationNameValue, SubscriptionId, ResourceGroup, CorrelationId;
+let knownPairs = keyEvents
+    | where TimeGenerated < ago(detectionWindow)
+    | distinct Caller, AccountResourceId;
+keyEvents
+| where TimeGenerated >= ago(detectionWindow)
+| where Caller !in~ (allowedCallers)
+| join kind=leftanti knownPairs on Caller, AccountResourceId
+| extend ViaPortal = AppId in (portalAppIds)
+| summarize
+    FirstSeen = min(TimeGenerated),
+    LastSeen = max(TimeGenerated),
+    Operations = make_set(OperationNameValue),
+    SourceIPs = make_set(CallerIpAddress),
+    AppIds = make_set(AppId),
+    AnyNonPortal = max(toint(not(ViaPortal))),
+    EventCount = count()
+    by Caller, AccountName, AccountResourceId, SubscriptionId, ResourceGroup
+| extend Severity = iff(AnyNonPortal == 1, "High", "Medium")
+| order by Severity asc, FirstSeen desc
+
+
+// =====================================================================
+// Companion hunt: key auth switched back on (adapted from the logic of
+// Datadog's public rule "Azure AI Foundry API keys enabled then listed").
+// A ListKeys that FAILS (local auth disabled), followed within 3h by a
+// ListKeys that SUCCEEDS on the same account = someone re-enabled API keys.
+// Check the Failed event's Properties for the disableLocalAuth message in your
+// own logs first; the exact status text may differ by API version.
+// =====================================================================
+// let window = 3h;
+// let ops = "MICROSOFT.COGNITIVESERVICES/ACCOUNTS/LISTKEYS/ACTION";
+// let failed = AzureActivity
+//     | where TimeGenerated > ago(1d)
+//     | where OperationNameValue =~ ops and ActivityStatusValue =~ "Failure"
+//     | project FailTime = TimeGenerated, Account = tolower(_ResourceId), FailCaller = Caller;
+// AzureActivity
+// | where TimeGenerated > ago(1d)
+// | where OperationNameValue =~ ops and ActivityStatusValue in~ ("Success", "Succeeded")
+// | project OkTime = TimeGenerated, Account = tolower(_ResourceId), Caller, CallerIpAddress
+// | join kind=inner failed on Account
+// | where OkTime between (FailTime .. FailTime + window)
+// | summarize by Account, FailCaller, Caller, CallerIpAddress, FailTime, OkTime

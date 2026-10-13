@@ -1,0 +1,16 @@
+name: validate
+on:
+  push:
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt sigma-cli
+      - name: Metadata and README index
+        run: python scripts/build.py --check
+      - name: Sigma rules
+        run: sigma check --fail-on-issues -x filename_length -x filename detections/  # rule.yml naming is intentional

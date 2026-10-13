@@ -1,0 +1,33 @@
+title: Azure AI Services API Keys Listed or Regenerated
+id: 5310353b-40b4-43af-a5eb-2080a59efe1f
+status: experimental
+description: |
+    Detects an identity listing (ListKeys) or regenerating the API keys of an Azure AI Services /
+    Azure OpenAI / AI Foundry account. These keys are static, identity-less credentials: once read,
+    they work from anywhere and are a common precursor to LLMjacking (abuse of paid model capacity).
+    This Sigma rule is the portable, single-event version. The first-seen caller/account baseline
+    lives in sentinel.kql because Sigma cannot express it.
+references:
+    - https://attack.mitre.org/techniques/T1552/
+    - https://attack.mitre.org/techniques/T1496/
+    - https://github.com/tishev-sec/detections/tree/main/detections/cloud/DET-001-azure-ai-api-key-access
+author: Tishev
+date: 2026-10-12
+tags:
+    - attack.credential-access
+    - attack.t1552
+    - attack.impact
+    - attack.t1496
+logsource:
+    product: azure
+    service: activitylogs
+detection:
+    selection:
+        operationName:
+            - MICROSOFT.COGNITIVESERVICES/ACCOUNTS/LISTKEYS/ACTION
+            - MICROSOFT.COGNITIVESERVICES/ACCOUNTS/REGENERATEKEY/ACTION
+    condition: selection
+falsepositives:
+    - Engineers copying keys from the Azure portal or AI Foundry while setting up an app
+    - CI/CD pipelines and key-rotation jobs that read keys to store them in Key Vault
+level: medium

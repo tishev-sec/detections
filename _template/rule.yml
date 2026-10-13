@@ -1,0 +1,20 @@
+title: Short, specific detection title
+id: 00000000-0000-0000-0000-000000000000   # python3 -c "import uuid;print(uuid.uuid4())"
+status: experimental
+description: What this detects and why it matters.
+references:
+    - https://attack.mitre.org/techniques/T0000/
+author: Tishev
+date: YYYY-MM-DD
+tags:
+    - attack.t0000
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    selection:
+        Image|endswith: '\example.exe'
+    condition: selection
+falsepositives:
+    - Unknown
+level: medium

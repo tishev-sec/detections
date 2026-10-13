@@ -1,0 +1,8 @@
+// =====================================================================
+// Detection: Short, specific detection title
+// Author: Tishev | ID: DET-XXX | Date: YYYY-MM-DD | Status: experimental
+// Table: TableName
+// ATT&CK: T0000 Technique name
+// =====================================================================
+TableName
+| where TimeGenerated > ago(1h)
