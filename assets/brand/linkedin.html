@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>:root{--w:1584px;--h:396px}
+.code{left:56px;top:38px;font-size:15px;opacity:.55}
+.wrap{position:absolute;left:640px;top:58px;width:820px}
+.label{font-size:19px;margin-bottom:14px}.name{font-size:92px}.sub{font-size:28px;margin:16px 0 22px}
+.chip{font-size:17px}.url{font-size:19px;margin-top:22px}</style></head><body>
+<div class="code mono"><span class="c">// DET-001 · Azure AI API key access</span>
+AzureActivity
+| <span class="k">where</span> OperationNameValue <span class="k">in~</span> (keyOps)
+| <span class="k">where</span> ActivityStatusValue =~ <span class="s">"Success"</span>
+| <span class="k">join</span> kind=<span class="k">leftanti</span> knownPairs
+    <span class="k">on</span> Caller, AccountResourceId
+| <span class="k">extend</span> Severity = <span class="k">iff</span>(AnyNonPortal, <span class="s">"High"</span>, <span class="s">"Medium"</span>)</div>
+<div class="wrap">
+  <div class="label mono">// detection engineering</div>
+  <div class="name">Tishev</div>
+  <div class="sub">Detections for cloud &amp; identity attacks</div>
+  <div class="chips"><span class="chip">KQL</span><span class="chip">Sigma</span><span class="chip">Microsoft Sentinel</span><span class="chip">Defender XDR</span><span class="chip">MITRE ATT&amp;CK</span></div>
+  <div class="url mono">github.com/<b>tishev-sec</b></div>
+</div><div class="bar"></div></body></html>

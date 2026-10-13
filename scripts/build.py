@@ -82,6 +82,8 @@ def build_docs(dets, readme):
                   readme, flags=re.S)
     home = re.sub(r"\]\((?!https?:|#|mailto:|detections/DET)([^)]+)\)", lambda m: f"]({blob}/{m.group(1)})", home)
     (DOCS / "index.md").write_text(home)
+    (DOCS / "assets").mkdir(exist_ok=True)
+    shutil.copy(ROOT / "assets/brand/social-preview.png", DOCS / "assets/social-preview.png")
 
 
 def main():
