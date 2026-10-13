@@ -4,10 +4,12 @@
 [![site](https://img.shields.io/badge/browse-tishev--sec.github.io%2Fdetections-blue)](https://tishev-sec.github.io/detections/)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Detection engineering ideas, shared as working **KQL** and **Sigma** rules.
+Detection engineering research, published as ready-to-use **KQL** for Microsoft Sentinel and
+Defender XDR, with **Sigma** versions for every other SIEM.
 
-Each detection starts as a post on LinkedIn. This repo holds the rules behind the post: the
-idea, the query, how it maps to MITRE ATT&CK, the false positives I expect, and how to test it.
+Every rule comes with the reasoning behind it: what attacker behaviour it targets, why that signal
+beats the obvious one, its MITRE ATT&CK mapping, expected false positives, tuning advice and a
+way to test it.
 
 **Browse the readable version:** https://tishev-sec.github.io/detections/
 
@@ -47,7 +49,7 @@ sigma convert -t splunk -p splunk_windows detections/<category>/<folder>/rule.ym
 ## Feedback
 
 Found a false positive, a bypass, or a better way to write a query? Open an
-[issue](https://github.com/tishev-sec/detections/issues) or comment on the LinkedIn post.
+[issue](https://github.com/tishev-sec/detections/issues) or reach out to me directly.
 Pull requests are welcome.
 
 ## License
