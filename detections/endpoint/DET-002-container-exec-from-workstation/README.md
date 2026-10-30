@@ -6,7 +6,7 @@ data_source: DeviceProcessEvents
 attack: [T1609]
 status: experimental
 date: 2026-10-30
-linkedin:
+linkedin: https://lnkd.in/p/dVbKx7B9
 ---
 
 # DET-002 · Container exec from a workstation via kubectl, oc, docker or podman
