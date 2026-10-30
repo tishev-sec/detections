@@ -13,4 +13,4 @@ jobs:
       - name: Metadata and README index
         run: python scripts/build.py --check
       - name: Sigma rules
-        run: sigma check --fail-on-issues -x filename_length -x filename detections/  # rule.yml naming is intentional
+        run: sigma check --fail-on-issues -x filename_length -x duplicate_filename detections/  # rule.yml naming is intentional
