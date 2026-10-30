@@ -1,0 +1,27 @@
+// =====================================================================
+// Detection: Container exec from a workstation via kubectl, oc, docker or podman
+// Author: Aleksandar Tishev (@tishev) | ID: DET-002 | Date: 2026-10-30 | Status: experimental
+// Table: DeviceProcessEvents (Microsoft Defender for Endpoint)
+// ATT&CK: T1609 Container Administration Command
+//
+// Why: in the Binance theft, a compromised DevOps laptop reached a service
+// container that submitted withdrawals. Treat an exec from a workstation into
+// production like an interactive logon to a production server.
+// Query 1 is generated from rule.yml with pySigma (Microsoft XDR pipeline).
+// =====================================================================
+
+// --- Query 1: every container exec from a workstation (Medium) ---
+DeviceProcessEvents
+| where ((FolderPath endswith "\\kubectl.exe" or FolderPath endswith "\\oc.exe" or FolderPath endswith "\\docker.exe" or FolderPath endswith "\\podman.exe") or (ProcessVersionInfoOriginalFileName in~ ("kubectl.exe", "oc.exe", "docker.exe", "podman.exe"))) and ProcessCommandLine contains " exec "
+| project Timestamp, DeviceName, AccountUpn, FileName, ProcessCommandLine, InitiatingProcessFileName
+
+
+// --- Query 2: exec into production or signing scopes (High) ---
+// Fill prodScopes with your production context names and sensitive namespaces.
+let prodScopes = dynamic(["prod", "production", "signing", "withdrawal"]);
+DeviceProcessEvents
+| where FileName in~ ("kubectl.exe", "oc.exe", "docker.exe", "podman.exe")
+    or ProcessVersionInfoOriginalFileName in~ ("kubectl.exe", "oc.exe", "docker.exe", "podman.exe")
+| where ProcessCommandLine contains " exec "
+| where ProcessCommandLine has_any (prodScopes)
+| project Timestamp, DeviceName, AccountUpn, FileName, ProcessCommandLine, InitiatingProcessFileName

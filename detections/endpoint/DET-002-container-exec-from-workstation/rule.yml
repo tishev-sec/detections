@@ -1,0 +1,38 @@
+title: Container Exec From Workstation Via Kubectl, Oc, Docker Or Podman
+id: 7c1d2e4a-5b6f-4c8d-9e0a-1b2c3d4e5f60
+status: experimental
+description: |
+    Detects kubectl, oc, docker or podman running a command inside a running container from a Windows workstation, interactive or not.
+    In the Binance theft, a compromised DevOps engineer's laptop gave the attacker access to a service container that submitted withdrawals.
+    Exec sessions into production or signing service containers from a laptop deserve the same scrutiny as logons to production servers.
+references:
+    - https://www.bleepingcomputer.com/news/security/binance-links-63-billion-crypto-theft-to-compromised-devops-laptop/
+    - https://thehackernews.com/2026/10/binance-suffers-security-breach.html
+    - https://github.com/tishev-sec/detections/tree/main/detections/endpoint/DET-002-container-exec-from-workstation
+author: Aleksandar Tishev (@tishev)
+date: 2026-10-30
+tags:
+    - attack.execution
+    - attack.t1609
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith:
+              - '\kubectl.exe'
+              - '\oc.exe'
+              - '\docker.exe'
+              - '\podman.exe'
+        - OriginalFileName:
+              - 'kubectl.exe'
+              - 'oc.exe'
+              - 'docker.exe'
+              - 'podman.exe'
+    selection_exec:
+        CommandLine|contains: ' exec '
+    condition: all of selection_*
+falsepositives:
+    - On-call engineers debugging containers, especially in development clusters
+    - Approved break-glass accounts working in production
+level: medium
