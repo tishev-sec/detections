@@ -20,6 +20,7 @@ way to test it.
 |---|---|---|---|---|---|---|
 | DET-001 | [Unexpected Azure OpenAI / AI Foundry API key access](detections/cloud/DET-001-azure-ai-api-key-access/) | cloud | Microsoft Sentinel | [T1552](https://attack.mitre.org/techniques/T1552/), [T1496](https://attack.mitre.org/techniques/T1496/) | KQL · Sigma | experimental |
 | DET-002 | [Container exec from a workstation via kubectl, oc, docker or podman](detections/endpoint/DET-002-container-exec-from-workstation/) | endpoint | Microsoft Defender XDR | [T1609](https://attack.mitre.org/techniques/T1609/) | KQL · Sigma | experimental |
+| DET-003 | [Cursor extension host spawning systemsetup, launchctl or pgrep -f on macOS](detections/endpoint/DET-003-cursor-extension-host-spawning-systemsetup-launchctl/) | endpoint | Microsoft Defender XDR | [T1059.004](https://attack.mitre.org/techniques/T1059/004/), [T1543.001](https://attack.mitre.org/techniques/T1543/001/) | KQL · Sigma | experimental |
 <!-- INDEX:END -->
 
 ## What's in each detection

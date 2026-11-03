@@ -1,0 +1,13 @@
+// =====================================================================
+// Detection: Cursor extension host spawning systemsetup, launchctl or pgrep -f on macOS
+// Author: Aleksandar Tishev (@tishev) | ID: DET-003 | Date: 2026-11-03 | Status: experimental
+// Table: DeviceProcessEvents (Microsoft Defender XDR)
+// ATT&CK: T1059.004 Unix Shell, T1543.001 Launch Agent
+//
+// Why: alert when Cursor's extension host starts systemsetup,
+// launchctl or pgrep -f on a Mac.
+// Generated from rule.yml with pySigma (Microsoft XDR pipeline).
+// =====================================================================
+
+DeviceProcessEvents
+| where InitiatingProcessFolderPath endswith "/Cursor Helper (Plugin)" and ((FolderPath endswith "/systemsetup" or FolderPath endswith "/launchctl") or (FolderPath endswith "/pgrep" and ProcessCommandLine contains " -f "))

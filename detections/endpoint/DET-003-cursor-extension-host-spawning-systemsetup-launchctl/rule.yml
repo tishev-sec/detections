@@ -1,0 +1,38 @@
+title: Cursor Extension Host Spawning systemsetup, launchctl or pgrep -f on macOS
+id: 2bf56d00-edbc-4bab-8562-0fbc9d6a7296
+status: experimental
+description: |
+    Detects the Cursor extension host process (Cursor Helper (Plugin)) starting systemsetup, launchctl or pgrep with -f.
+    The trojanized anthropic.claude-code 2.1.312 and 2.1.313 extensions served in the Cursor marketplace used this
+    process lineage to check Remote Login, load a LaunchAgent and check for its running SSH tunnel.
+    An editor extension host rarely needs to query system settings or manage launch agents.
+references:
+    - https://www.microsoft.com/en-us/security/blog/2026/10/30/inside-malicious-claude-code-branded-cursor-extension-persistent-ssh-backdoor/
+    - https://expel.com/blog/blog-fake-claude-code-extension-cursor-ssh-backdoor/
+    - https://tishev-sec.github.io/detections/detections/DET-003-cursor-extension-host-spawning-systemsetup-launchctl/
+author: Aleksandar Tishev (@tishev)
+date: 2026-11-02
+tags:
+    - attack.execution
+    - attack.t1059.004
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1543.001
+logsource:
+    category: process_creation
+    product: macos
+detection:
+    selection_parent:
+        ParentImage|endswith: '/Cursor Helper (Plugin)'
+    selection_child_settings:
+        Image|endswith:
+            - '/systemsetup'
+            - '/launchctl'
+    selection_child_pgrep:
+        Image|endswith: '/pgrep'
+        CommandLine|contains: ' -f '
+    condition: selection_parent and 1 of selection_child_*
+falsepositives:
+    - Extensions that legitimately manage their own launch agents through launchctl
+    - Extensions that check for running processes with pgrep -f
+level: high
